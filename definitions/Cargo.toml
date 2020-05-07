@@ -1,0 +1,10 @@
+[package]
+name = "feather-definitions"
+version = "0.1.0"
+authors = ["caelunshun <caelunshun@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+
+[build-dependencies]
+feather-definitions-generator = { path = "generator" }
