@@ -46,7 +46,5 @@ pub fn load_directory(dir: impl AsRef<Path>, target_dir: &str) -> anyhow::Result
     let data = frontend::from_slice(&files).context("failed to load data")?;
     backend::generate(target_dir, &data).context("failed to generate code for data")?;
 
-    println!("{:#?}", data);
-
     Ok(())
 }

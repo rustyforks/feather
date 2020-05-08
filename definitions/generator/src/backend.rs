@@ -94,27 +94,44 @@ impl ToTokens for Type {
             Type::String => quote! { &'static str },
             Type::Custom(name) => {
                 let name = ident(name.to_camel_case());
-                quote! { #name }
+                quote! { crate::#name }
             }
         };
         tokens.extend(t);
     }
 }
 
-impl ToTokens for Value {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        let t = match self {
+impl Value {
+    fn tokens(&self, typ: &Type) -> TokenStream {
+        match self {
             Value::Bool(x) => quote! { #x },
-            Value::Slice(x) => quote! { [#(#x),*] },
+            Value::Slice(x) => {
+                let mut stream = TokenStream::new();
+                let inner = if let Type::Slice(inner) = typ {
+                    inner
+                } else {
+                    panic!()
+                };
+
+                for value in x {
+                    stream.extend(value.tokens(inner.as_ref()));
+                }
+
+                stream
+            }
             Value::U32(x) => quote! { #x },
             Value::F64(x) => quote! { #x },
             Value::String(x) => quote! { #x },
             Value::Custom(name) => {
+                let type_name = if let Type::Custom(x) = typ {
+                    ident(x.to_camel_case())
+                } else {
+                    panic!()
+                };
                 let name = ident(name.to_camel_case());
-                quote! { #name }
+                quote! { crate::#type_name::#name }
             }
-        };
-        tokens.extend(t);
+        }
     }
 }
 
@@ -132,15 +149,16 @@ fn generate_enum_functions(e: &Enum) -> TokenStream {
         let mut match_arms = vec![];
         for (variant, value) in &property.mapping {
             let variant = ident(variant.to_camel_case());
+            let value_tokens = value.tokens(&property.typ);
 
             let value = if exhaustive {
-                quote! { #value }
+                quote! { #value_tokens }
             } else {
-                quote! { Some(#value) }
+                quote! { Some(#value_tokens) }
             };
 
             match_arms.push(quote! {
-                #variant => #value,
+                #name::#variant => #value,
             });
         }
 
@@ -150,9 +168,14 @@ fn generate_enum_functions(e: &Enum) -> TokenStream {
             });
         }
 
+        let ret = if exhaustive {
+            quote! { #property_type }
+        } else {
+            quote! { Option<#property_type> }
+        };
+
         let f = quote! {
-            pub fn #property_name(self) -> crate::#property_type {
-                use #name::*;
+            pub fn #property_name(self) -> #ret {
                 match self {
                     #(#match_arms)*
                 }

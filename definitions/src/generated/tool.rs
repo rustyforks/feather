@@ -11,7 +11,7 @@ pub enum Tool {
 impl Tool {}
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ToPrimitive, FromPrimitive)]
 pub enum ToolMaterial {
-    Wood,
+    Wooden,
     Stone,
     Iron,
     Diamond,
@@ -19,13 +19,12 @@ pub enum ToolMaterial {
 }
 impl ToolMaterial {
     pub fn dig_multiplier(self) -> f64 {
-        use ToolMaterial::*;
         match self {
-            Diamond => 8f64,
-            Gold => 12f64,
-            Iron => 6f64,
-            Stone => 4f64,
-            Wood => 2f64,
+            ToolMaterial::Diamond => 8f64,
+            ToolMaterial::Gold => 12f64,
+            ToolMaterial::Iron => 6f64,
+            ToolMaterial::Stone => 4f64,
+            ToolMaterial::Wooden => 2f64,
         }
     }
 }
